@@ -1,0 +1,65 @@
+
+---
+- name: Management & Diagnostic of Linux Servers
+  hosts: linux_servers
+  become: yes
+  # gather_facts: yes
+  tasks:
+    - name: Ensure Nginx, SSH and Apache2 services are started
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - nginx
+        - apache2
+        - ssh
+
+    - name: Ensure Python is installed
+      ansible.builtin.package:
+        name: python3
+        state: present
+
+    - name: List logged in users
+      ansible.builtin.command:
+        cmd: who
+      register: users_logged_in
+
+    - name: Check for available updates
+      ansible.builtin.command:
+        cmd: apt list --upgradable
+      register: updates_available
+      ignore_errors: yes
+
+    - name: Session info
+      ansible.builtin.debug:
+        msg:
+          - "Logged In Users: {{ users_logged_in.stdout }}"
+          - "Available Updates: {{ updates_available.stdout | default('N/A') }}"
+    
+    #If you want to run a Python script for system analysis, ensure the script is available on the target server.
+    #- name: Copy sysanalyzer.py script to the server
+      #ansible.builtin.copy:
+        #src: ./system_analyzer.py
+        #dest: /tmp/system_analyzer.py
+        #mode: '0755'
+
+    - name: Run sysanalyzer.py script
+      ansible.builtin.command:
+        cmd: python3 sysanalyzer.py
+      register: sysanalyzer_output
+      ignore_errors: yes
+
+    - name: Print sysanalyzer.py output
+      ansible.builtin.debug:
+        msg: "SysAnalyzer Output: {{ sysanalyzer_output.stdout | default('No output') }}"
+    
+
+      
+
+
+
+
+  
+
+    
